@@ -42,11 +42,28 @@ def add_order_api():
 
 @app.route('/api/orders/<string:order_id>', methods=['GET'])
 def get_order_api(order_id):
-    pass
+    order = order_tracker.get_order_by_id(order_id)
+
+    if order is None:
+        return jsonify({"error": f"Order with ID '{order_id}' not found."}), 404
+
+    return jsonify(order), 200
+
 
 @app.route('/api/orders/<string:order_id>/status', methods=['PUT'])
 def update_order_status_api(order_id):
-    pass
+    data = request.json
+
+    try:
+        order_tracker.update_order_status(order_id, data.get("new_status"))
+    except ValueError as e:
+        # Distinguish between a missing order (404) and bad input (400)
+        if "not found" in str(e):
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+    order = order_tracker.get_order_by_id(order_id)
+    return jsonify(order), 200
 
 @app.route('/api/orders', methods=['GET'])
 def list_orders_api():
