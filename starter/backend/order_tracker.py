@@ -57,7 +57,22 @@ class OrderTracker:
         return self.storage.get_order(order_id)
 
     def update_order_status(self, order_id: str, new_status: str):
-        pass
+        # Validate new_status first (fail fast, no storage read)
+        if new_status not in ["pending", "processing", "shipped", "delivered", "cancelled"]:
+            raise ValueError(f"Invalid status: '{new_status}'")
+
+        # Validate order_id (fail fast, no storage read)
+        if not order_id:
+            raise ValueError("Order ID cannot be empty.")
+
+        # Check if the order exists
+        existing_order = self.storage.get_order(order_id)
+        if not existing_order:
+            raise ValueError(f"Order with ID '{order_id}' not found.")
+
+        # Update the order status
+        existing_order['status'] = new_status
+        self.storage.save_order(existing_order)
 
     def list_all_orders(self):
         pass
