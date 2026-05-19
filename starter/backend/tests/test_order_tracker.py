@@ -281,7 +281,7 @@ def test_list_orders_by_status_returns_only_matching_orders(order_tracker, mock_
 
 # --- list_orders_by_status: no matching orders ---
 
-def test_list_orders_by_status_returns_none_if_no_matching_orders(order_tracker, mock_storage):
+def test_list_orders_by_status_returns_empty_list_if_no_matching_orders(order_tracker, mock_storage):
     """Tests that listing orders by status returns an empty list if no orders match."""
     order1 = {"order_id": "ORD021", "item_name": "Test Item 21", "quantity": 1, "customer_id": "CUST014", "status": "shipped"}
     order2 = {"order_id": "ORD022", "item_name": "Test Item 22", "quantity": 2, "customer_id": "CUST015", "status": "delivered"}
