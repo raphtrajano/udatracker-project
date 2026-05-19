@@ -47,7 +47,7 @@ class OrderTracker:
         }
 
         # Save the new order
-        self.storage.save_order(new_order)
+        self.storage.save_order(new_order['order_id'], new_order)
 
     def get_order_by_id(self, order_id: str):
         # Validate order_id
@@ -73,7 +73,7 @@ class OrderTracker:
         # Update the order status
         updated_order = existing_order.copy()
         updated_order['status'] = new_status
-        self.storage.save_order(updated_order)
+        self.storage.save_order(updated_order['order_id'], updated_order)
 
     def list_all_orders(self):
         return list(self.storage.get_all_orders().values()) 
