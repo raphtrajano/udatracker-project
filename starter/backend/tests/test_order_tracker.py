@@ -133,6 +133,8 @@ def test_add_order_raises_error_if_initial_status_invalid(order_tracker):
 
 # ==================== GET ORDER BY ID TESTS ====================
 
+# --- get_order_by_id: success cases ---
+
 def test_get_order_by_id_returns_order(order_tracker, mock_storage):
     """Tests that getting an order by ID returns the correct order."""
     expected_order = {
@@ -151,6 +153,7 @@ def test_get_order_by_id_returns_order(order_tracker, mock_storage):
     assert order['customer_id'] == "CUST006"
     assert order['status'] == "pending"
 
+# --- get_order_by_id: error cases ---
 def test_get_order_by_id_returns_none_for_nonexistent_order(order_tracker):
     """Tests that getting a non-existent order by ID returns None."""
     order = order_tracker.get_order_by_id("ORD999")
@@ -165,3 +168,57 @@ def test_get_order_by_id_raises_error_if_order_id_is_empty(order_tracker):
     """Tests that getting an order with an empty string ID raises a ValueError."""
     with pytest.raises(ValueError, match="Order ID cannot be empty."):
         order_tracker.get_order_by_id("")
+
+# ==================== UPDATE ORDER STATUS TESTS ====================
+
+# --- update_order_status: success cases ---
+
+def test_update_order_status_success(order_tracker, mock_storage):
+    """Tests that updating an order's status successfully changes the status."""
+    order_id = "ORD015"
+    new_status = "shipped"
+    mock_storage.get_order.return_value = {"order_id": order_id, "status": "pending"}
+
+    order_tracker.update_order_status(order_id, new_status)
+
+    mock_storage.save_order.assert_called_once_with({"order_id": order_id, "status": new_status})
+
+# --- update_order_status: invalid status (fail fast) ---
+
+def test_update_order_status_raises_error_if_status_invalid(order_tracker, mock_storage):
+    """Tests that an invalid status raises ValueError before any storage read."""
+    with pytest.raises(ValueError, match="Invalid status"):
+        order_tracker.update_order_status("ORD015", "non_existent_status")
+
+    # Fail fast: storage should never be touched
+    mock_storage.get_order.assert_not_called()
+    mock_storage.save_order.assert_not_called()
+
+# --- update_order_status: non-existent order ---
+
+def test_update_order_status_raises_error_if_order_not_found(order_tracker, mock_storage):
+    """Tests that updating a non-existent order raises a ValueError."""
+    mock_storage.get_order.return_value = None  
+
+    with pytest.raises(ValueError, match="Order with ID 'ORD111' not found."):
+        order_tracker.update_order_status("ORD111", "shipped")
+
+    mock_storage.get_order.assert_called_once_with("ORD111")
+
+# --- update_order_status: empty/None ID ---
+
+def test_update_order_status_raises_error_if_order_id_is_empty(order_tracker, mock_storage):
+    """Tests that an empty order ID raises ValueError before any storage read."""
+    with pytest.raises(ValueError, match="Order ID cannot be empty."):
+        order_tracker.update_order_status("", "shipped")
+
+    mock_storage.get_order.assert_not_called()
+    mock_storage.save_order.assert_not_called()
+
+def test_update_order_status_raises_error_if_order_id_is_none(order_tracker, mock_storage):
+    """Tests that a None order ID raises ValueError before any storage read."""
+    with pytest.raises(ValueError, match="Order ID cannot be empty."):
+        order_tracker.update_order_status(None, "shipped")
+
+    mock_storage.get_order.assert_not_called()
+    mock_storage.save_order.assert_not_called()
