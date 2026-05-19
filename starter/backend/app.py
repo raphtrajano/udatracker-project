@@ -29,14 +29,11 @@ def add_order_api():
             kwargs["status"] = data.get("status")
 
         order_tracker.add_order(**kwargs)
-    # Handle both validation errors and duplicate order ID errors
     except ValueError as e:
-        # Check if the error message indicates a duplicate order ID
         if "already exists" in str(e):
             return jsonify({"error": str(e)}), 409
         return jsonify({"error": str(e)}), 400
 
-    # Retrieve the newly created order to return in the response
     order = in_memory_storage.get_order(data.get("order_id"))
     return jsonify(order), 201
 
@@ -67,7 +64,17 @@ def update_order_status_api(order_id):
 
 @app.route('/api/orders', methods=['GET'])
 def list_orders_api():
-    pass
+    status = request.args.get("status")
+
+    try:
+        if status:
+            orders = order_tracker.list_orders_by_status(status)
+        else:
+            orders = order_tracker.list_all_orders()
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify(orders), 200
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=8000)
