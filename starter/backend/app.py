@@ -16,7 +16,29 @@ def serve_static(filename):
 
 @app.route('/api/orders', methods=['POST'])
 def add_order_api():
-    pass
+    data = request.json
+
+    try:
+        kwargs = {
+            "order_id": data.get("order_id"),
+            "item_name": data.get("item_name"),
+            "quantity": data.get("quantity"),
+            "customer_id": data.get("customer_id"),
+        }
+        if data.get("status"):
+            kwargs["status"] = data.get("status")
+
+        order_tracker.add_order(**kwargs)
+    # Handle both validation errors and duplicate order ID errors
+    except ValueError as e:
+        # Check if the error message indicates a duplicate order ID
+        if "already exists" in str(e):
+            return jsonify({"error": str(e)}), 409
+        return jsonify({"error": str(e)}), 400
+
+    # Retrieve the newly created order to return in the response
+    order = in_memory_storage.get_order(data.get("order_id"))
+    return jsonify(order), 201
 
 @app.route('/api/orders/<string:order_id>', methods=['GET'])
 def get_order_api(order_id):
@@ -31,4 +53,4 @@ def list_orders_api():
     pass
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0", debug=True, port=8000)
