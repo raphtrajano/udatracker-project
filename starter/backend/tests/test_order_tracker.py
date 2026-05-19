@@ -222,3 +222,33 @@ def test_update_order_status_raises_error_if_order_id_is_none(order_tracker, moc
 
     mock_storage.get_order.assert_not_called()
     mock_storage.save_order.assert_not_called()
+
+# ==================== LIST ALL ORDERS TESTS ====================
+
+# --- list_all_orders: success cases ---
+
+def test_list_all_orders_returns_all_orders(order_tracker, mock_storage):
+    """Tests that listing all orders returns all orders as a list of dicts."""
+    order1 = {"order_id": "ORD016", "item_name": "Test Item 16", "quantity": 1, "customer_id": "CUST007", "status": "pending"}
+    order2 = {"order_id": "ORD017", "item_name": "Test Item 17", "quantity": 2, "customer_id": "CUST008", "status": "shipped"}
+    order3 = {"order_id": "ORD250", "item_name": "Test Item 250", "quantity": 5, "customer_id": "CUST010", "status": "processing"}
+    order4 = {"order_id": "ORD999", "item_name": "Test Item 999", "quantity": 3, "customer_id": "CUST009", "status": "delivered"}
+
+    mock_storage.get_all_orders.return_value = {
+        "ORD016": order1, "ORD017": order2, "ORD250": order3, "ORD999": order4
+    }
+
+    orders = order_tracker.list_all_orders()
+
+    assert isinstance(orders, list)
+    assert len(orders) == 4
+
+# --- list_all_orders: empty storage case ---
+
+def test_list_all_orders_returns_empty_list_when_no_orders(order_tracker, mock_storage):
+    """Tests that listing all orders returns an empty list when storage is empty."""
+    mock_storage.get_all_orders.return_value = {}
+
+    orders = order_tracker.list_all_orders()
+
+    assert orders == []
