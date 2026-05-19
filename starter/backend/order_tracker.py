@@ -71,8 +71,9 @@ class OrderTracker:
             raise ValueError(f"Order with ID '{order_id}' not found.")
 
         # Update the order status
-        existing_order['status'] = new_status
-        self.storage.save_order(existing_order)
+        updated_order = existing_order.copy()
+        updated_order['status'] = new_status
+        self.storage.save_order(updated_order)
 
     def list_all_orders(self):
         return list(self.storage.get_all_orders().values()) 
