@@ -50,7 +50,11 @@ class OrderTracker:
         self.storage.save_order(new_order)
 
     def get_order_by_id(self, order_id: str):
-        pass
+        # Validate order_id
+        if not order_id:
+            raise ValueError("Order ID cannot be empty.")
+
+        return self.storage.get_order(order_id)
 
     def update_order_status(self, order_id: str, new_status: str):
         pass
