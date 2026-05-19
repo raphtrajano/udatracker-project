@@ -39,7 +39,10 @@ def add_order_api():
 
 @app.route('/api/orders/<string:order_id>', methods=['GET'])
 def get_order_api(order_id):
-    order = order_tracker.get_order_by_id(order_id)
+    try:
+        order = order_tracker.get_order_by_id(order_id)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
 
     if order is None:
         return jsonify({"error": f"Order with ID '{order_id}' not found."}), 404
