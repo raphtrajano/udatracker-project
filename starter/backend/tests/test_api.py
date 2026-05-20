@@ -51,3 +51,41 @@ def test_list_orders_by_status_api_matching(client):
     assert response.status_code == 200
     assert len(response.json) == 1
     assert response.json[0]['order_id'] == "S001"
+
+# ==================== FILTER BY CUSTOMER ID TESTS ====================
+
+def test_list_orders_by_customer_api_returns_matching_orders(client):
+    """Tests GET /api/orders?customer_id= returns only that customer's orders."""
+    client.post('/api/orders', json={"order_id": "C001", "item_name": "A", "quantity": 1, "customer_id": "CUST_A", "status": "pending"})
+    client.post('/api/orders', json={"order_id": "C002", "item_name": "B", "quantity": 2, "customer_id": "CUST_B", "status": "shipped"})
+    client.post('/api/orders', json={"order_id": "C003", "item_name": "C", "quantity": 3, "customer_id": "CUST_A", "status": "delivered"})
+
+    response = client.get('/api/orders?customer_id=CUST_A')
+    assert response.status_code == 200
+    assert len(response.json) == 2
+    assert all(order['customer_id'] == 'CUST_A' for order in response.json)
+
+def test_list_orders_by_customer_and_status_api(client):
+    """Tests GET /api/orders?customer_id=&status= returns correctly filtered orders."""
+    client.post('/api/orders', json={"order_id": "CS001", "item_name": "A", "quantity": 1, "customer_id": "CUST_X", "status": "pending"})
+    client.post('/api/orders', json={"order_id": "CS002", "item_name": "B", "quantity": 2, "customer_id": "CUST_X", "status": "shipped"})
+    client.post('/api/orders', json={"order_id": "CS003", "item_name": "C", "quantity": 3, "customer_id": "CUST_Y", "status": "pending"})
+
+    response = client.get('/api/orders?customer_id=CUST_X&status=pending')
+    assert response.status_code == 200
+    assert len(response.json) == 1
+    assert response.json[0]['order_id'] == "CS001"
+
+def test_list_orders_by_customer_api_returns_empty_list_for_unknown_customer(client):
+    """Tests that an unknown customer_id returns an empty list with 200."""
+    client.post('/api/orders', json={"order_id": "CE001", "item_name": "A", "quantity": 1, "customer_id": "CUST_A"})
+
+    response = client.get('/api/orders?customer_id=UNKNOWN')
+    assert response.status_code == 200
+    assert response.json == []
+
+def test_list_orders_by_customer_api_invalid_status_returns_400(client):
+    """Tests that combining customer_id with an invalid status returns 400."""
+    response = client.get('/api/orders?customer_id=CUST_A&status=bad_status')
+    assert response.status_code == 400
+    assert 'error' in response.json
