@@ -28,7 +28,7 @@ def order_tracker(mock_storage):
 
 # --- add_order: success cases ---
 
-# Example test provided by project instrunctions
+# Example test provided by project instructions
 def test_add_order_success(order_tracker, mock_storage):
     """Tests adding a new order with default 'pending' status."""
     order_tracker.add_order("ORD001", "Laptop", 1, "CUST001")
@@ -36,7 +36,7 @@ def test_add_order_success(order_tracker, mock_storage):
     # We expect save_order to be called once
     mock_storage.save_order.assert_called_once()
 
-# Example test provided by project instrunctions
+# Example test provided by project instructions
 def test_add_order_raises_error_if_exists(order_tracker, mock_storage):
     """Tests that adding an order with a duplicate ID raises a ValueError."""
     # Simulate that the storage finds an existing order
