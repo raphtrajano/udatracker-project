@@ -29,3 +29,129 @@ This directory contains the starter code for the Udatracker project. The initial
 ├── pytest.ini
 └── README.md
 ```
+
+---
+
+## API Reference
+
+Base URL: `http://127.0.0.1:8000`
+
+Valid status values: `pending` , `processing` , `shipped` , `delivered` , `cancelled`
+
+---
+
+### POST `/api/orders` — Add an order
+
+Request body (JSON):
+
+| Field | Type | Required |
+| --- | --- | --- |
+| `order_id` | string | Yes |
+| `item_name` | string | Yes |
+| `quantity` | integer (> 0) | Yes |
+| `customer_id` | string | Yes |
+| `status` | string | No (default: `pending`) |
+
+Responses:
+
+| Code | Meaning |
+| --- | --- |
+| `201` | Order created - returns the order object |
+| `400` | Validation error (missing/invalid field) |
+| `409` | Order ID already exists |
+
+```bash
+curl -s -X POST "http://127.0.0.1:8000/api/orders" \
+  -H "Content-Type: application/json" \
+  -d '{"order_id": "ORD001", "item_name": "Laptop", "quantity": 1, "customer_id": "CUST001"}'
+```
+
+---
+
+### GET `/api/orders/<order_id>` — Get a single order
+
+Responses:
+
+| Code | Meaning |
+| --- | --- |
+| `200` | Returns the order object |
+| `400` | Invalid/empty order ID |
+| `404` | Order not found |
+
+```bash
+curl -s "http://127.0.0.1:8000/api/orders/ORD001"
+```
+
+---
+
+### PUT `/api/orders/<order_id>/status` — Update order status
+
+Request body (JSON):
+
+| Field | Type | Required |
+| --- | --- | --- |
+| `new_status` | string | Yes |
+
+Responses:
+
+| Code | Meaning |
+| --- | --- |
+| `200` | Returns the updated order object |
+| `400` | Invalid status value |
+| `404` | Order not found |
+
+```bash
+curl -s -X PUT "http://127.0.0.1:8000/api/orders/ORD001/status" \
+  -H "Content-Type: application/json" \
+  -d '{"new_status": "shipped"}'
+```
+
+---
+
+### DELETE `/api/orders/<order_id>` — Delete an order
+
+Responses:
+
+| Code | Meaning |
+| --- | --- |
+| `200` | Order deleted — returns a confirmation message |
+| `400` | Invalid/empty order ID |
+| `404` | Order not found |
+
+```bash
+curl -s -X DELETE "http://127.0.0.1:8000/api/orders/ORD001"
+```
+
+---
+
+### GET `/api/orders` — List orders
+
+Supports optional query parameters that can be used independently or combined.
+
+Query parameters:
+
+| Param | Type | Description |
+| --- | --- | --- |
+| `status` | string | Filter by order status |
+| `customer_id` | string | Filter by customer ID |
+
+Responses:
+
+| Code | Meaning |
+| --- | --- |
+| `200` | Returns a list of order objects (empty list if none match) |
+| `400` | Invalid status value |
+
+```bash
+# All orders
+curl -s "http://127.0.0.1:8000/api/orders"
+
+# Filter by status
+curl -s "http://127.0.0.1:8000/api/orders?status=pending"
+
+# Filter by customer
+curl -s "http://127.0.0.1:8000/api/orders?customer_id=CUST001"
+
+# Filter by customer AND status
+curl -s "http://127.0.0.1:8000/api/orders?customer_id=CUST001&status=shipped"
+```
