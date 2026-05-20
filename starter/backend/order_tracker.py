@@ -103,3 +103,15 @@ class OrderTracker:
             results = [o for o in results if o['status'] == status]
 
         return results
+
+    def delete_order(self, order_id: str):
+        # Validate order_id
+        if not order_id:
+            raise ValueError("Order ID cannot be empty.")
+
+        # Check if the order exists
+        existing_order = self.storage.get_order(order_id)
+        if not existing_order:
+            raise ValueError(f"Order with ID '{order_id}' not found.")
+
+        self.storage.delete_order(order_id)
