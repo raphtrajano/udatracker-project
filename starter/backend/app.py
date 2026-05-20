@@ -68,9 +68,12 @@ def update_order_status_api(order_id):
 @app.route('/api/orders', methods=['GET'])
 def list_orders_api():
     status = request.args.get("status")
+    customer_id = request.args.get("customer_id")
 
     try:
-        if status:
+        if customer_id:
+            orders = order_tracker.list_orders_by_customer(customer_id, status or None)
+        elif status:
             orders = order_tracker.list_orders_by_status(status)
         else:
             orders = order_tracker.list_all_orders()
