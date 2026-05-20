@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateStatusForm = document.getElementById('update-status-form');
     const listAllOrdersBtn = document.getElementById('list-all-orders-btn');
     const filterStatusSelect = document.getElementById('filter-status');
+    const filterCustomerIdInput = document.getElementById('filter-customer-id');
     const ordersTableBody = document.getElementById('orders-table-body');
 
     function showMessage(message, type) {
@@ -28,9 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function fetchAndRenderOrders(status = '') {
+    async function fetchAndRenderOrders(status = '', customerId = '') {
         try {
-            const url = status ? `/api/orders?status=${status}` : '/api/orders';
+            const params = new URLSearchParams();
+            if (customerId) params.append('customer_id', customerId);
+            if (status) params.append('status', status);
+            const url = params.toString() ? `/api/orders?${params}` : '/api/orders';
             const response = await fetch(url);
             const orders = await response.json();
             if (!response.ok) throw new Error(orders.error || 'Unknown error');
@@ -82,7 +86,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) { showMessage(`Failed to update status: ${error.message}`, 'error'); }
     });
 
-    listAllOrdersBtn.addEventListener('click', () => { filterStatusSelect.value = ''; fetchAndRenderOrders(); });
-    filterStatusSelect.addEventListener('change', (e) => fetchAndRenderOrders(e.target.value));
+    listAllOrdersBtn.addEventListener('click', () => {
+        filterStatusSelect.value = '';
+        filterCustomerIdInput.value = '';
+        fetchAndRenderOrders();
+    });
+    filterStatusSelect.addEventListener('change', () => {
+        fetchAndRenderOrders(filterStatusSelect.value, filterCustomerIdInput.value.trim());
+    });
+    filterCustomerIdInput.addEventListener('input', () => {
+        fetchAndRenderOrders(filterStatusSelect.value, filterCustomerIdInput.value.trim());
+    });
     fetchAndRenderOrders();
 });

@@ -45,8 +45,9 @@
         <div class="card p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-semibold">All Orders</h2>
-                <div>
+                <div class="flex flex-wrap gap-2 items-center">
                     <button id="list-all-orders-btn" class="btn-secondary">Refresh</button>
+                    <input type="text" id="filter-customer-id" placeholder="Filter by Customer ID" class="input-style inline-block w-auto">
                     <select id="filter-status" class="input-style inline-block w-auto">
                         <option value="">Filter by Status</option>
                         <option value="pending">Pending</option><option value="processing">Processing</option><option value="shipped">Shipped</option>
