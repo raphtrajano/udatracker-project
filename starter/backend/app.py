@@ -82,5 +82,16 @@ def list_orders_api():
 
     return jsonify(orders), 200
 
+@app.route('/api/orders/<string:order_id>', methods=['DELETE'])
+def delete_order_api(order_id):
+    try:
+        order_tracker.delete_order(order_id)
+    except ValueError as e:
+        if "not found" in str(e):
+            return jsonify({"error": str(e)}), 404
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify({"message": f"Order with ID '{order_id}' deleted successfully."}), 200
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=8000)
