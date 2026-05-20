@@ -397,3 +397,47 @@ def test_list_orders_by_customer_raises_error_if_status_invalid(order_tracker):
     """Tests that an invalid status raises a ValueError (fail fast, before storage read)."""
     with pytest.raises(ValueError, match="Invalid status: 'bad_status'"):
         order_tracker.list_orders_by_customer("CUST025", status="bad_status")
+
+# ====================== DELETE ORDER TESTS ======================
+
+# --- delete_order: success cases ---
+
+def test_delete_order_success(order_tracker, mock_storage):
+    """Tests that deleting an existing order successfully removes it from storage."""
+    order_id = "ORD050"
+    mock_storage.get_order.return_value = {"order_id": order_id, "status": "pending"}
+
+    order_tracker.delete_order(order_id)
+
+    mock_storage.delete_order.assert_called_once_with(order_id)
+
+# --- delete_order: error cases ---
+
+def test_delete_order_raises_error_if_order_not_found(order_tracker, mock_storage):
+    """Tests that deleting a non-existent order raises a ValueError."""
+    mock_storage.get_order.return_value = None
+
+    with pytest.raises(ValueError, match="Order with ID 'ORD999' not found."):
+        order_tracker.delete_order("ORD999")
+
+    mock_storage.get_order.assert_called_once_with("ORD999")
+    mock_storage.delete_order.assert_not_called()
+
+# --- delete_order: empty ID ---
+
+def test_delete_order_raises_error_if_order_id_is_empty(order_tracker, mock_storage):
+    """Tests that an empty order_id raises ValueError before any storage read."""
+    with pytest.raises(ValueError, match="Order ID cannot be empty."):
+        order_tracker.delete_order("")
+
+    mock_storage.get_order.assert_not_called()
+    mock_storage.delete_order.assert_not_called()
+
+# --- delete_order: none ID ---
+def test_delete_order_raises_error_if_order_id_is_none(order_tracker, mock_storage):
+    """Tests that a None order_id raises ValueError before any storage read."""
+    with pytest.raises(ValueError, match="Order ID cannot be empty."):
+        order_tracker.delete_order(None)
+
+    mock_storage.get_order.assert_not_called()
+    mock_storage.delete_order.assert_not_called()
