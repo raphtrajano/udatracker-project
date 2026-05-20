@@ -89,3 +89,39 @@ def test_list_orders_by_customer_api_invalid_status_returns_400(client):
     response = client.get('/api/orders?customer_id=CUST_A&status=bad_status')
     assert response.status_code == 400
     assert 'error' in response.json
+
+# ==================== DELETE ORDER TESTS ====================
+
+def test_delete_order_api_success(client):
+    """Tests that deleting an existing order returns 200 with a confirmation message."""
+    client.post('/api/orders', json={"order_id": "DEL001", "item_name": "Item", "quantity": 1, "customer_id": "C1"})
+
+    response = client.delete('/api/orders/DEL001')
+    assert response.status_code == 200
+    assert 'message' in response.json
+
+def test_delete_order_api_order_no_longer_exists_after_deletion(client):
+    """Tests that a deleted order can no longer be retrieved."""
+    client.post('/api/orders', json={"order_id": "DEL002", "item_name": "Item", "quantity": 1, "customer_id": "C1"})
+    client.delete('/api/orders/DEL002')
+
+    response = client.get('/api/orders/DEL002')
+    assert response.status_code == 404
+
+def test_delete_order_api_not_found_returns_404(client):
+    """Tests that deleting a non-existent order returns 404."""
+    response = client.delete('/api/orders/NONEXISTENT')
+    assert response.status_code == 404
+    assert 'error' in response.json
+
+def test_delete_order_api_does_not_affect_other_orders(client):
+    """Tests that deleting one order does not remove other orders."""
+    client.post('/api/orders', json={"order_id": "DEL003", "item_name": "Item A", "quantity": 1, "customer_id": "C1"})
+    client.post('/api/orders', json={"order_id": "DEL004", "item_name": "Item B", "quantity": 2, "customer_id": "C2"})
+
+    client.delete('/api/orders/DEL003')
+
+    response = client.get('/api/orders')
+    assert response.status_code == 200
+    assert len(response.json) == 1
+    assert response.json[0]['order_id'] == "DEL004"
