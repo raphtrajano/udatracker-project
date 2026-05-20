@@ -317,3 +317,83 @@ def test_list_orders_by_status_raises_error_if_status_empty(order_tracker):
     """Tests that listing orders by an empty status raises a ValueError."""
     with pytest.raises(ValueError, match="Invalid status: ''"):
         order_tracker.list_orders_by_status("")
+
+# ==================== LIST ORDERS BY CUSTOMER TESTS ====================
+
+# --- list_orders_by_customer: success cases ---
+
+def test_list_orders_by_customer_returns_matching_orders(order_tracker, mock_storage):
+    """Tests that listing orders by customer_id returns only that customer's orders."""
+    order1 = {"order_id": "ORD030", "item_name": "Item A", "quantity": 1, "customer_id": "CUST020", "status": "pending"}
+    order2 = {"order_id": "ORD031", "item_name": "Item B", "quantity": 2, "customer_id": "CUST021", "status": "shipped"}
+    order3 = {"order_id": "ORD032", "item_name": "Item C", "quantity": 3, "customer_id": "CUST020", "status": "delivered"}
+
+    mock_storage.get_all_orders.return_value = {
+        "ORD030": order1, "ORD031": order2, "ORD032": order3
+    }
+
+    result = order_tracker.list_orders_by_customer("CUST020")
+
+    assert isinstance(result, list)
+    assert len(result) == 2
+    assert all(o['customer_id'] == "CUST020" for o in result)
+
+# --- list_orders_by_customer: combined filters ---
+
+def test_list_orders_by_customer_with_status_filter(order_tracker, mock_storage):
+    """Tests filtering by customer_id combined with a status filter."""
+    order1 = {"order_id": "ORD033", "item_name": "Item A", "quantity": 1, "customer_id": "CUST022", "status": "pending"}
+    order2 = {"order_id": "ORD034", "item_name": "Item B", "quantity": 2, "customer_id": "CUST022", "status": "shipped"}
+    order3 = {"order_id": "ORD035", "item_name": "Item C", "quantity": 3, "customer_id": "CUST022", "status": "pending"}
+
+    mock_storage.get_all_orders.return_value = {
+        "ORD033": order1, "ORD034": order2, "ORD035": order3
+    }
+
+    result = order_tracker.list_orders_by_customer("CUST022", status="pending")
+
+    assert len(result) == 2
+    assert all(order['customer_id'] == "CUST022" and order['status'] == "pending" for order in result)
+
+# --- list_orders_by_customer: no matching orders ---
+
+def test_list_orders_by_customer_returns_empty_list_if_no_match(order_tracker, mock_storage):
+    """Tests that an empty list is returned when no orders match the customer_id."""
+    order1 = {"order_id": "ORD036", "item_name": "Item A", "quantity": 1, "customer_id": "CUST023", "status": "pending"}
+    mock_storage.get_all_orders.return_value = {"ORD036": order1}
+
+    result = order_tracker.list_orders_by_customer("CUST_999")
+
+    assert result == []
+
+# --- list_orders_by_customer: no matching status ---
+
+def test_list_orders_by_customer_returns_empty_list_if_no_matching_status(order_tracker, mock_storage):
+    """Tests that combining customer_id + status returns empty list when status doesn't match."""
+    order1 = {"order_id": "ORD037", "item_name": "Item A", "quantity": 1, "customer_id": "CUST024", "status": "pending"}
+    mock_storage.get_all_orders.return_value = {"ORD037": order1}
+
+    result = order_tracker.list_orders_by_customer("CUST024", status="shipped")
+
+    assert result == []
+
+# --- list_orders_by_customer: empty customer_id ---
+
+def test_list_orders_by_customer_raises_error_if_customer_id_empty(order_tracker):
+    """Tests that an empty customer_id raises a ValueError."""
+    with pytest.raises(ValueError, match="Customer ID cannot be empty."):
+        order_tracker.list_orders_by_customer("")
+
+# --- list_orders_by_customer: none customer_id ---
+
+def test_list_orders_by_customer_raises_error_if_customer_id_none(order_tracker):
+    """Tests that a None customer_id raises a ValueError."""
+    with pytest.raises(ValueError, match="Customer ID cannot be empty."):
+        order_tracker.list_orders_by_customer(None)
+
+# --- list_orders_by_customer: invalid status ---
+
+def test_list_orders_by_customer_raises_error_if_status_invalid(order_tracker):
+    """Tests that an invalid status raises a ValueError (fail fast, before storage read)."""
+    with pytest.raises(ValueError, match="Invalid status: 'bad_status'"):
+        order_tracker.list_orders_by_customer("CUST025", status="bad_status")
