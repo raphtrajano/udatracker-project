@@ -85,3 +85,21 @@ class OrderTracker:
 
         all_orders = self.storage.get_all_orders()
         return [order for order in all_orders.values() if order['status'] == status]
+
+    def list_orders_by_customer(self, customer_id: str, status: str = None):
+        # Validate customer_id
+        if not customer_id:
+            raise ValueError("Customer ID cannot be empty.")
+
+        # Validate status if provided 
+        if status is not None and status not in ["pending", "processing", "shipped", "delivered", "cancelled"]:
+            raise ValueError(f"Invalid status: '{status}'")
+
+        all_orders = self.storage.get_all_orders()
+        results = [o for o in all_orders.values() if o['customer_id'] == customer_id]
+
+        # Apply optional status filter
+        if status is not None:
+            results = [o for o in results if o['status'] == status]
+
+        return results
