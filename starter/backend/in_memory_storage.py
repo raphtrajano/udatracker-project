@@ -20,3 +20,7 @@ class InMemoryStorage:
 
     def clear(self):
         self._orders = {}
+    
+    def delete_order(self, order_id: str):
+        if order_id in self._orders:
+            del self._orders[order_id]
