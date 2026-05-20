@@ -32,6 +32,38 @@ This directory contains the starter code for the Udatracker project. The initial
 
 ---
 
+## Running Locally with Docker
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) installed and running
+
+### Option 1 — Docker Compose
+
+```bash
+docker compose up --build
+```
+
+The app will be available at `http://127.0.0.1:8000`.
+
+To stop:
+
+```bash
+docker compose down
+```
+
+### Option 2 — Docker CLI
+
+```bash
+# Build the image
+docker build -t udatracker .
+
+# Run the container
+docker run -p 8000:8000 udatracker
+```
+
+---
+
 ## API Reference
 
 Base URL: `http://127.0.0.1:8000`
