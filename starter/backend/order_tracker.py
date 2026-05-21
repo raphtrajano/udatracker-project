@@ -1,6 +1,9 @@
 # This module contains the OrderTracker class, which encapsulates the core
 # business logic for managing orders.
 
+VALID_STATUSES = frozenset(["pending", "processing", "shipped", "delivered", "cancelled"])
+
+
 class OrderTracker:
     """
     Manages customer orders, providing functionalities to add, update,
@@ -29,7 +32,7 @@ class OrderTracker:
             raise ValueError("Quantity must be a positive integer.")
 
         # Validate initial status
-        if status not in ["pending", "processing", "shipped", "delivered", "cancelled"]:
+        if status not in VALID_STATUSES:
             raise ValueError(f"Invalid initial status: '{status}'")
 
         # Check for existing order
@@ -58,7 +61,7 @@ class OrderTracker:
 
     def update_order_status(self, order_id: str, new_status: str):
         # Validate new_status first (fail fast, no storage read)
-        if new_status not in ["pending", "processing", "shipped", "delivered", "cancelled"]:
+        if new_status not in VALID_STATUSES:
             raise ValueError(f"Invalid status: '{new_status}'")
 
         # Validate order_id (fail fast, no storage read)
@@ -80,7 +83,7 @@ class OrderTracker:
 
     def list_orders_by_status(self, status: str):
         # Validate status (fail fast, no storage read)
-        if status not in ["pending", "processing", "shipped", "delivered", "cancelled"]:
+        if status not in VALID_STATUSES:
             raise ValueError(f"Invalid status: '{status}'")
 
         all_orders = self.storage.get_all_orders()
@@ -92,7 +95,7 @@ class OrderTracker:
             raise ValueError("Customer ID cannot be empty.")
 
         # Validate status if provided
-        if status is not None and status not in ["pending", "processing", "shipped", "delivered", "cancelled"]:
+        if status is not None and status not in VALID_STATUSES:
             raise ValueError(f"Invalid status: '{status}'")
 
         all_orders = self.storage.get_all_orders()
