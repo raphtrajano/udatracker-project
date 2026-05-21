@@ -4,6 +4,12 @@
 VALID_STATUSES = frozenset(["pending", "processing", "shipped", "delivered", "cancelled"])
 
 
+def _validate_status(status: str, label: str = "status"):
+    """Raise ValueError if status is not a recognised value."""
+    if status not in VALID_STATUSES:
+        raise ValueError(f"Invalid {label}: '{status}'")
+
+
 class OrderTracker:
     """
     Manages customer orders, providing functionalities to add, update,
@@ -32,8 +38,7 @@ class OrderTracker:
             raise ValueError("Quantity must be a positive integer.")
 
         # Validate initial status
-        if status not in VALID_STATUSES:
-            raise ValueError(f"Invalid initial status: '{status}'")
+        _validate_status(status, label="initial status")
 
         # Check for existing order
         existing_order = self.storage.get_order(order_id)
@@ -62,8 +67,7 @@ class OrderTracker:
 
     def update_order_status(self, order_id: str, new_status: str):
         # Validate new_status first (fail fast, no storage read)
-        if new_status not in VALID_STATUSES:
-            raise ValueError(f"Invalid status: '{new_status}'")
+        _validate_status(new_status)
 
         # Validate order_id (fail fast, no storage read)
         if not order_id:
@@ -85,11 +89,10 @@ class OrderTracker:
 
     def list_orders_by_status(self, status: str):
         # Validate status (fail fast, no storage read)
-        if status not in VALID_STATUSES:
-            raise ValueError(f"Invalid status: '{status}'")
+        _validate_status(status)
 
         all_orders = self.storage.get_all_orders()
-        return [order for order in all_orders.values() if order['status'] == status]
+        return [order for order in all_orders.values() if order.get('status') == status]
 
     def list_orders_by_customer(self, customer_id: str, status: str = None):
         # Validate customer_id
@@ -97,15 +100,15 @@ class OrderTracker:
             raise ValueError("Customer ID cannot be empty.")
 
         # Validate status if provided
-        if status is not None and status not in VALID_STATUSES:
-            raise ValueError(f"Invalid status: '{status}'")
+        if status is not None:
+            _validate_status(status)
 
         all_orders = self.storage.get_all_orders()
-        results = [o for o in all_orders.values() if o['customer_id'] == customer_id]
+        results = [o for o in all_orders.values() if o.get('customer_id') == customer_id]
 
         # Apply optional status filter
         if status is not None:
-            results = [o for o in results if o['status'] == status]
+            results = [o for o in results if o.get('status') == status]
 
         return results
 
