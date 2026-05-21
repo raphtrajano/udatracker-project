@@ -31,13 +31,12 @@ def add_order_api():
         if data.get("status"):
             kwargs["status"] = data.get("status")
 
-        order_tracker.add_order(**kwargs)
+        order = order_tracker.add_order(**kwargs)
     except ValueError as e:
         if "already exists" in str(e):
             return jsonify({"error": str(e)}), 409
         return jsonify({"error": str(e)}), 400
 
-    order = in_memory_storage.get_order(data.get("order_id"))
     return jsonify(order), 201
 
 
@@ -59,14 +58,13 @@ def update_order_status_api(order_id):
     data = request.json
 
     try:
-        order_tracker.update_order_status(order_id, data.get("new_status"))
+        order = order_tracker.update_order_status(order_id, data.get("new_status"))
     except ValueError as e:
         # Distinguish between a missing order (404) and bad input (400)
         if "not found" in str(e):
             return jsonify({"error": str(e)}), 404
         return jsonify({"error": str(e)}), 400
 
-    order = order_tracker.get_order_by_id(order_id)
     return jsonify(order), 200
 
 
