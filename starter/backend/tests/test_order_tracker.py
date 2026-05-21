@@ -152,6 +152,14 @@ def test_get_order_by_id_returns_order(order_tracker, mock_storage):
     assert order['customer_id'] == "CUST006"
     assert order['status'] == "pending"
 
+def test_get_order_by_id_delegates_to_storage(order_tracker, mock_storage):
+    """Tests that get_order_by_id calls storage.get_order with the correct order_id."""
+    mock_storage.get_order.return_value = {"order_id": "ORD014", "status": "pending"}
+
+    order_tracker.get_order_by_id("ORD014")
+
+    mock_storage.get_order.assert_called_once_with("ORD014")
+
 # --- get_order_by_id: error cases ---
 def test_get_order_by_id_returns_none_for_nonexistent_order(order_tracker):
     """Tests that getting a non-existent order by ID returns None."""
@@ -178,9 +186,10 @@ def test_update_order_status_success(order_tracker, mock_storage):
     new_status = "shipped"
     mock_storage.get_order.return_value = {"order_id": order_id, "status": "pending"}
 
-    order_tracker.update_order_status(order_id, new_status)
+    updated_order = order_tracker.update_order_status(order_id, new_status)
 
     mock_storage.save_order.assert_called_once_with(order_id, {"order_id": order_id, "status": new_status})
+    assert updated_order == {"order_id": order_id, "status": new_status}
 
 # --- update_order_status: invalid status (fail fast) ---
 
