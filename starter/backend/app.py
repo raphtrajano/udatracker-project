@@ -1,6 +1,13 @@
 from flask import Flask, request, jsonify, send_from_directory
 from backend.order_tracker import OrderTracker
 from backend.in_memory_storage import InMemoryStorage
+from backend.exceptions import (
+    DuplicateOrderError,
+    InvalidQuantityError,
+    InvalidStatusError,
+    MissingFieldError,
+    OrderNotFoundError,
+)
 
 app = Flask(__name__, static_folder='../frontend')
 in_memory_storage = InMemoryStorage()
@@ -32,9 +39,9 @@ def add_order_api():
             kwargs["status"] = data.get("status")
 
         order = order_tracker.add_order(**kwargs)
-    except ValueError as e:
-        if "already exists" in str(e):
-            return jsonify({"error": str(e)}), 409
+    except DuplicateOrderError as e:
+        return jsonify({"error": str(e)}), 409
+    except (MissingFieldError, InvalidQuantityError, InvalidStatusError) as e:
         return jsonify({"error": str(e)}), 400
 
     return jsonify(order), 201
@@ -44,7 +51,7 @@ def add_order_api():
 def get_order_api(order_id):
     try:
         order = order_tracker.get_order_by_id(order_id)
-    except ValueError as e:
+    except MissingFieldError as e:
         # Flask never routes an empty string to <string:order_id>, so this
         # branch is defensive against future callers that bypass the route
         # layer.
@@ -62,10 +69,9 @@ def update_order_status_api(order_id):
 
     try:
         order = order_tracker.update_order_status(order_id, data.get("new_status"))
-    except ValueError as e:
-        # Distinguish between a missing order (404) and bad input (400)
-        if "not found" in str(e):
-            return jsonify({"error": str(e)}), 404
+    except OrderNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except (MissingFieldError, InvalidStatusError) as e:
         return jsonify({"error": str(e)}), 400
 
     return jsonify(order), 200
@@ -83,7 +89,7 @@ def list_orders_api():
             orders = order_tracker.list_orders_by_status(status)
         else:
             orders = order_tracker.list_all_orders()
-    except ValueError as e:
+    except (MissingFieldError, InvalidStatusError) as e:
         return jsonify({"error": str(e)}), 400
 
     return jsonify(orders), 200
@@ -93,9 +99,9 @@ def list_orders_api():
 def delete_order_api(order_id):
     try:
         order_tracker.delete_order(order_id)
-    except ValueError as e:
-        if "not found" in str(e):
-            return jsonify({"error": str(e)}), 404
+    except OrderNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except MissingFieldError as e:
         # Defensive: handles empty/None order_id from non-route callers.
         return jsonify({"error": str(e)}), 400
 

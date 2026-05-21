@@ -1,13 +1,21 @@
 # This module contains the OrderTracker class, which encapsulates the core
 # business logic for managing orders.
 
+from backend.exceptions import (
+    DuplicateOrderError,
+    InvalidQuantityError,
+    InvalidStatusError,
+    MissingFieldError,
+    OrderNotFoundError,
+)
+
 VALID_STATUSES = frozenset(["pending", "processing", "shipped", "delivered", "cancelled"])
 
 
 def _validate_status(status: str, label: str = "status"):
-    """Raise ValueError if status is not a recognised value."""
+    """Raise InvalidStatusError if status is not a recognised value."""
     if status not in VALID_STATUSES:
-        raise ValueError(f"Invalid {label}: '{status}'")
+        raise InvalidStatusError(f"Invalid {label}: '{status}'")
 
 
 class OrderTracker:
@@ -25,17 +33,17 @@ class OrderTracker:
     def add_order(self, order_id: str, item_name: str, quantity: int, customer_id: str, status: str = "pending"):
         # Validate required fields
         if not order_id:
-            raise ValueError("Missing required field: order_id")
+            raise MissingFieldError("Missing required field: order_id")
         if not item_name:
-            raise ValueError("Missing required field: item_name")
+            raise MissingFieldError("Missing required field: item_name")
         if quantity is None:
-            raise ValueError("Missing required field: quantity")
+            raise MissingFieldError("Missing required field: quantity")
         if not customer_id:
-            raise ValueError("Missing required field: customer_id")
+            raise MissingFieldError("Missing required field: customer_id")
 
         # Validate quantity
         if not isinstance(quantity, int) or quantity <= 0:
-            raise ValueError("Quantity must be a positive integer.")
+            raise InvalidQuantityError("Quantity must be a positive integer.")
 
         # Validate initial status
         _validate_status(status, label="initial status")
@@ -43,7 +51,7 @@ class OrderTracker:
         # Check for existing order
         existing_order = self.storage.get_order(order_id)
         if existing_order:
-            raise ValueError(f"Order with ID '{order_id}' already exists.")
+            raise DuplicateOrderError(f"Order with ID '{order_id}' already exists.")
 
         # Create new order
         new_order = {
@@ -61,7 +69,7 @@ class OrderTracker:
     def get_order_by_id(self, order_id: str):
         # Validate order_id
         if not order_id:
-            raise ValueError("Order ID cannot be empty.")
+            raise MissingFieldError("Order ID cannot be empty.")
 
         return self.storage.get_order(order_id)
 
@@ -71,12 +79,12 @@ class OrderTracker:
 
         # Validate order_id (fail fast, no storage read)
         if not order_id:
-            raise ValueError("Order ID cannot be empty.")
+            raise MissingFieldError("Order ID cannot be empty.")
 
         # Check if the order exists
         existing_order = self.storage.get_order(order_id)
         if not existing_order:
-            raise ValueError(f"Order with ID '{order_id}' not found.")
+            raise OrderNotFoundError(f"Order with ID '{order_id}' not found.")
 
         # Update the order status
         updated_order = existing_order.copy()
@@ -97,7 +105,7 @@ class OrderTracker:
     def list_orders_by_customer(self, customer_id: str, status: str = None):
         # Validate customer_id
         if not customer_id:
-            raise ValueError("Customer ID cannot be empty.")
+            raise MissingFieldError("Customer ID cannot be empty.")
 
         # Validate status if provided
         if status is not None:
@@ -115,11 +123,11 @@ class OrderTracker:
     def delete_order(self, order_id: str):
         # Validate order_id
         if not order_id:
-            raise ValueError("Order ID cannot be empty.")
+            raise MissingFieldError("Order ID cannot be empty.")
 
         # Check if the order exists
         existing_order = self.storage.get_order(order_id)
         if not existing_order:
-            raise ValueError(f"Order with ID '{order_id}' not found.")
+            raise OrderNotFoundError(f"Order with ID '{order_id}' not found.")
 
         self.storage.delete_order(order_id)
