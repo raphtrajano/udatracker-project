@@ -76,7 +76,7 @@ class OrderTracker:
         self.storage.save_order(updated_order['order_id'], updated_order)
 
     def list_all_orders(self):
-        return list(self.storage.get_all_orders().values()) 
+        return list(self.storage.get_all_orders().values())
 
     def list_orders_by_status(self, status: str):
         # Validate status (fail fast, no storage read)
@@ -91,7 +91,7 @@ class OrderTracker:
         if not customer_id:
             raise ValueError("Customer ID cannot be empty.")
 
-        # Validate status if provided 
+        # Validate status if provided
         if status is not None and status not in ["pending", "processing", "shipped", "delivered", "cancelled"]:
             raise ValueError(f"Invalid status: '{status}'")
 

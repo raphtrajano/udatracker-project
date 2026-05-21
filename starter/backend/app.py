@@ -6,13 +6,16 @@ app = Flask(__name__, static_folder='../frontend')
 in_memory_storage = InMemoryStorage()
 order_tracker = OrderTracker(in_memory_storage)
 
+
 @app.route('/')
 def serve_index():
     return send_from_directory(app.static_folder, 'index.html')
 
+
 @app.route('/<path:filename>')
 def serve_static(filename):
     return send_from_directory(app.static_folder, filename)
+
 
 @app.route('/api/orders', methods=['POST'])
 def add_order_api():
@@ -36,6 +39,7 @@ def add_order_api():
 
     order = in_memory_storage.get_order(data.get("order_id"))
     return jsonify(order), 201
+
 
 @app.route('/api/orders/<string:order_id>', methods=['GET'])
 def get_order_api(order_id):
@@ -65,6 +69,7 @@ def update_order_status_api(order_id):
     order = order_tracker.get_order_by_id(order_id)
     return jsonify(order), 200
 
+
 @app.route('/api/orders', methods=['GET'])
 def list_orders_api():
     status = request.args.get("status")
@@ -82,6 +87,7 @@ def list_orders_api():
 
     return jsonify(orders), 200
 
+
 @app.route('/api/orders/<string:order_id>', methods=['DELETE'])
 def delete_order_api(order_id):
     try:
@@ -92,6 +98,7 @@ def delete_order_api(order_id):
         return jsonify({"error": str(e)}), 400
 
     return jsonify({"message": f"Order with ID '{order_id}' deleted successfully."}), 200
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=8000)
