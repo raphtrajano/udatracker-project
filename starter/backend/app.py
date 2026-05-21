@@ -19,7 +19,7 @@ def serve_static(filename):
 
 @app.route('/api/orders', methods=['POST'])
 def add_order_api():
-    data = request.json
+    data = request.get_json(silent=True) or {}
 
     try:
         kwargs = {
@@ -45,6 +45,9 @@ def get_order_api(order_id):
     try:
         order = order_tracker.get_order_by_id(order_id)
     except ValueError as e:
+        # Flask never routes an empty string to <string:order_id>, so this
+        # branch is defensive against future callers that bypass the route
+        # layer.
         return jsonify({"error": str(e)}), 400
 
     if order is None:
@@ -55,7 +58,7 @@ def get_order_api(order_id):
 
 @app.route('/api/orders/<string:order_id>/status', methods=['PUT'])
 def update_order_status_api(order_id):
-    data = request.json
+    data = request.get_json(silent=True) or {}
 
     try:
         order = order_tracker.update_order_status(order_id, data.get("new_status"))
@@ -93,6 +96,7 @@ def delete_order_api(order_id):
     except ValueError as e:
         if "not found" in str(e):
             return jsonify({"error": str(e)}), 404
+        # Defensive: handles empty/None order_id from non-route callers.
         return jsonify({"error": str(e)}), 400
 
     return jsonify({"message": f"Order with ID '{order_id}' deleted successfully."}), 200
